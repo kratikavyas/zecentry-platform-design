@@ -40,12 +40,12 @@ Enable email/password in Supabase Auth. Configure the local and deployed callbac
 
 Two SQL files are currently committed under `supabase/migrations/`:
 
-- `20261124000100_harden_zcash_testnet_ticket_purchase.sql`
-- `20261124000200_serialize_zcash_request_replays.sql`
+- `20261124124337_harden_zcash_testnet_ticket_purchase.sql`
+- `20261124133124_serialize_zcash_request_replays.sql`
 
-They harden the testnet purchase function, restrict it to `service_role`, add unique transaction protection, and serialize duplicate request retries. They are not a complete database bootstrap. The connected Supabase project reports earlier migration history (events, organizer permissions, demo tickets, status changes, and initial Zcash receipts) for which the SQL source is not currently checked into this repository. The live project also records a few verification-query entries in its migration history. Do not run `supabase db reset`, do not apply these two files to an empty database and assume that is sufficient, and do not alter or delete the existing remote migration history.
+Their versions now match the corresponding hardening and replay-lock entries reported by the connected Supabase project's migration history. They harden the testnet purchase function, restrict it to `service_role`, add unique transaction protection, and serialize duplicate request retries. They are not a complete database bootstrap. The remote history also contains six earlier schema migrations—`create_rls_protected_events`, `grant_organizer_event_write_columns`, `create_private_demo_tickets`, `allow_event_organizers_ticket_status_updates`, `add_owner_ticket_status_rpc`, and `add_testnet_zcash_payment_receipts`—whose SQL sources are not currently checked into this repository. The live project also records four verification-query entries in its migration history. Do not run `supabase db reset`, do not apply these two files to an empty database and assume that is sufficient, and do not alter or delete the existing remote migration history.
 
-Before a clean-room release, recover the exact earlier migration SQL from its original source, reconcile local filenames with the remote migration versions, and validate the full ordered migration chain against an isolated Supabase project. The existing shared project was not reset or modified during this final audit.
+Before a clean-room release, recover the exact earlier migration SQL from its original source and validate the full ordered migration chain against an isolated Supabase project. The connected database was read-only during this final verification pass; the earlier hardening/replay migrations were applied to it before this audit.
 
 ## Checks
 
