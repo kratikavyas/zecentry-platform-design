@@ -93,6 +93,12 @@ test("enforces transaction uniqueness and permits exact request replay", { skip:
   assert.ifError(replay.error)
   assert.equal(replay.data.id, first.data.id)
 
+  const concurrentParams = args({ user, eventId })
+  const simultaneousRetries = await Promise.all([purchase(concurrentParams), purchase(concurrentParams)])
+  assert.ok(simultaneousRetries.every(result => !result.error))
+  assert.equal(simultaneousRetries[0].data.id, simultaneousRetries[1].data.id)
+  createdTicketIds.push(simultaneousRetries[0].data.id)
+
   const unrelatedRequest = await purchase(args({ user: other, eventId, txid: params.p_payment_txid }))
   assert.ok(unrelatedRequest.error)
   assert.match(unrelatedRequest.error.message, /tickets_payment_txid_unique|duplicate key/i)
