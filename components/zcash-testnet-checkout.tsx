@@ -15,6 +15,9 @@ type TicketResult = {
   totalAmount: number
   status: "Active"
   paymentMode: "zcash-testnet"
+  paymentTxid: string
+  paymentAmountZat: string
+  network: "testnet"
 }
 type PaymentRequest = {
   token: string

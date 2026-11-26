@@ -2,7 +2,7 @@
 
 ## Submission description
 
-**ZecEntry is an event-ticketing MVP exploring how Zcash testnet payments can fit into a familiar event-booking experience.** The product combines event discovery, organizer-owned event management, attendee ticket recovery, and staff check-in with an independently verified testnet checkout path.
+**ZecEntry brings people together, irl: discover gatherings and experiences worth showing up for, host your own, and explore how Zcash testnet payments can fit into a familiar event-booking experience.** The product combines event discovery, organizer-owned event management, attendee ticket recovery, and staff check-in with an independently verified testnet checkout path.
 
 The project separates a clearly labelled demo booking flow from Zcash testnet payments. In the testnet path, the server creates an expiring signed payment request bound to an authenticated attendee, event, price, quantity, recipient, and exact zatoshi amount. The verification endpoint checks the signed request and attendee ownership, asks a configured Zcash testnet node to verify the network and transaction outputs, and requires the exact amount and a confirmation before requesting ticket issuance. A service-role-only database function protects issuance with transaction uniqueness, idempotent retries, event capacity locking, and an atomic ticket/sold-count update. Supabase row-level security scopes attendee ticket access and organizer event management.
 

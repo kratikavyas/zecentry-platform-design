@@ -65,6 +65,9 @@ export async function POST(request: Request) {
         totalAmount: Number(row.total_amount),
         status: row.status,
         paymentMode: "zcash-testnet",
+        paymentTxid: txid.toLowerCase(),
+        paymentAmountZat: payment.amountZat,
+        network: "testnet",
       },
     }, { headers: { "Cache-Control": "no-store" } })
   } catch (error) {

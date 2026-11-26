@@ -1,6 +1,6 @@
 # ZecEntry
 
-ZecEntry is an early-stage event discovery and ticketing MVP exploring a simpler way for communities to accept Zcash testnet payments and manage event entry.
+ZecEntry brings people together, irl. Discover gatherings, workshops, meetups and experiences worth showing up for, host something of your own, and explore a Zcash testnet payment path for paid passes. Demo bookings are simulated; Zcash checkout is testnet-only and depends on operator configuration.
 
 - **Live demo:** https://zecentry-platform-design.vercel.app/
 - **Architecture and security:** [docs/architecture.md](docs/architecture.md)
