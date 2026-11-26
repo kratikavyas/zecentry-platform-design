@@ -1,6 +1,6 @@
 # ZecEntry
 
-ZecEntry is an early-stage event discovery and ticketing MVP exploring a simpler way for communities to accept Zcash testnet payments and manage event entry.
+ZecEntry brings people together, irl. Discover experiences worth showing up for, host gatherings, and pay for verified passes with Zcash. Transparent Zcash testnet payments are the current demo path; mainnet payments are not live. Preview bookings are simulations, and testnet payments require operator configuration.
 
 - **Live demo:** https://zecentry-platform-design.vercel.app/
 - **Architecture and security:** [docs/architecture.md](docs/architecture.md)
@@ -15,22 +15,24 @@ ZecEntry is an early-stage event discovery and ticketing MVP exploring a simpler
 - Organizer-owned event creation, editing, and deletion, enforced by database row-level security.
 - Persistent demo ticket booking. Demo checkout does not charge money; it inserts a ticket with `payment_mode = 'demo'`.
 - An attendee ticket wallet that reloads tickets from Supabase after sign-in.
-- Organizer ticket status management and staff check-in by booking reference.
-- A separate Zcash **testnet** payment flow. The server creates a signed, expiring payment request and only issues a ticket after its configured testnet node verifies the exact payment and at least one confirmation.
+- Organizer pass management, including real one-time QR check-in for verified Zcash testnet passes; preview bookings use a manual reference demonstration.
+- A separate Zcash **testnet** payment flow. The server creates a signed, expiring request and issues a pass only after its configured testnet node verifies the network, exact transparent recipient and amount, and at least one confirmation.
+- A unique QR entry credential for a server-verified testnet pass. Only its hash is stored; the authenticated attendee retrieves the credential, and an organizer-owned gathering can accept it once through the database check-in function. The camera scanner uses the browser camera; preview bookings remain manual-reference demos.
 
 ## Honest limitations
 
-This is an MVP, not a production payment processor. Demo bookings are not payments. The Zcash path only supports configured testnet transparent `t` addresses, depends on an operator-provided Zcash node and exchange-rate setting, and is not a mainnet integration. Testnet coins have no real-world value. A configured node, wallet, and safe end-to-end transaction are required to demonstrate a real testnet payment; an unconfigured deployment must not be presented as processing Zcash.
+This is an MVP, not a production payment processor. Demo bookings are not payments. The Zcash path supports configured testnet transparent `t` addresses only; shielded and Unified Address receivers and mainnet are unsupported. Testnet coins have no real-world value. A configured node, wallet, and an actual confirmed testnet transaction are required to demonstrate a payment; an unconfigured deployment must not be presented as processing Zcash. Mainnet ZEC is the product direction, not a live feature.
 
-Ticket transfer is disabled. The displayed QR-style ticket graphic is illustrative and is not a cryptographically signed or camera-scannable credential. Staff check-in in this MVP uses a booking reference and an authenticated organizer account; camera scanning, refunds, transfer, and production-grade fraud controls are not implemented.
+Verified testnet passes receive a unique, server-derived QR credential. The database stores its hash and the organizer-authorized check-in function consumes it once. Preview bookings have no verified QR credential and use a clearly labelled reference-only demo path. Ticket transfers, refunds, and production-grade fraud controls are not implemented. Camera use depends on browser permission and an authorized organizer session.
 
-The live Supabase project contains historical migration entries beyond the two SQL migrations currently checked into this repository. Do not reset a production or shared database from this checkout or claim that it provisions a clean Supabase project from zero until the missing historical migration source has been recovered and reconciled. See [the migration notes](docs/setup.md#database-migrations).
+The live Supabase project contains historical migration entries beyond the three SQL migrations currently checked into this repository. Do not reset a production or shared database from this checkout or claim that it provisions a clean Supabase project from zero until the missing historical migration source has been recovered and reconciled. See [the migration notes](docs/setup.md#database-migrations).
 
 ## Stack
 
 - Next.js 16 App Router, React 19, TypeScript, Tailwind CSS
 - Supabase Auth, Postgres, and row-level security
 - `@zcashlabs/zcash.js` for testnet address validation
+- `qrcode` and `@zxing/browser` for real pass QR rendering and camera scanning
 - Vercel for hosting
 
 ## Local development
@@ -53,7 +55,7 @@ Do not use production user or event data for integration tests.
 
 ## Security overview
 
-Zcash payment requests are signed server-side and bound to the signed-in attendee, event, quantity, price, recipient, exact amount, and expiry. The verification route rechecks the authenticated user and token, queries the configured node for the testnet network and transaction outputs, and calls a service-role-only issuance function only after the exact amount is confirmed. The database enforces transaction uniqueness, request replay checks, and event capacity locking. See the threat model in [docs/architecture.md](docs/architecture.md).
+Zcash payment requests are signed server-side and bound to the signed-in attendee, event, quantity, price, recipient, exact amount, and expiry. The verification route rechecks the authenticated user and signed request, queries the configured node for the testnet network and transaction outputs, and calls service-role-only ticket and entry-credential functions only after the exact payment is confirmed. Entry credentials are deterministic HMAC-derived values bound to the issued ticket; only SHA-256 hashes are stored. Check-in uses the authenticated organizer session and a database-serialized single-use function. The database also enforces transaction uniqueness, request replay checks, and event capacity locking. See [docs/architecture.md](docs/architecture.md) for the security model.
 
 ## License
 

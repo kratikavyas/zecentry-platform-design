@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
+import { createEntryCredential, hashEntryCredential } from "@/lib/entry-credential"
 import { readPaymentRequest, verifyTestnetPayment, ZcashConfigurationError, ZcashRpcError } from "@/lib/zcash-testnet"
 
 export const runtime = "nodejs"
@@ -51,6 +52,14 @@ export async function POST(request: Request) {
 
     const row = Array.isArray(data) ? data[0] : data
     if (!row) return NextResponse.json({ state: "pending", error: "The transaction is confirmed, but ticket issuance is still being reconciled. Retry verification." }, { status: 503 })
+
+    const entryCredential = createEntryCredential(row.id)
+    const { error: credentialError } = await admin.rpc("issue_entry_credential", {
+      p_ticket_id: row.id,
+      p_token_hash: hashEntryCredential(entryCredential),
+    })
+    if (credentialError) return NextResponse.json({ state: "pending", error: "Your testnet payment is confirmed, but the verified entry pass is still being prepared. Retry verification; do not send another payment." }, { status: 503, headers: { "Cache-Control": "no-store" } })
+
     return NextResponse.json({
       state: "confirmed",
       confirmations: checked.confirmations,
@@ -65,6 +74,10 @@ export async function POST(request: Request) {
         totalAmount: Number(row.total_amount),
         status: row.status,
         paymentMode: "zcash-testnet",
+        paymentTxid: txid.toLowerCase(),
+        paymentAmountZat: payment.amountZat,
+        network: "testnet",
+        entryCredential,
       },
     }, { headers: { "Cache-Control": "no-store" } })
   } catch (error) {

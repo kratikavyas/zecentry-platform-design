@@ -84,12 +84,12 @@ export function OrganizerAuth({ onBack, audience = "organizer" }: OrganizerAuthP
 
   return (
     <main className="organizer-auth wrap">
-      <button className="back-link" onClick={onBack} type="button"><ArrowLeft size={15} /> Back to events</button>
+      <button className="back-link" onClick={onBack} type="button"><ArrowLeft size={15} /> Back to experiences</button>
       <section className="organizer-auth-card" aria-labelledby="organizer-auth-title">
         <span className="auth-mark"><ShieldCheck size={19} /></span>
-        <span className="eyebrow">{isAttendee ? "YOUR TICKETS, SECURELY KEPT" : "A PRIVATE SPACE FOR YOUR EVENTS"}</span>
+        <span className="eyebrow">{isAttendee ? "YOUR PASSES, SECURELY KEPT" : "A PRIVATE SPACE FOR YOUR GATHERINGS"}</span>
         <h1 id="organizer-auth-title">{mode === "sign-in" ? "Welcome back." : isAttendee ? "Keep your place." : "Start gathering."}</h1>
-        <p className="auth-description">{isAttendee ? "Sign in or create an account to book tickets and keep them in your wallet." : "Sign in to create and manage the events that are yours. Public event discovery stays open to everyone."}</p>
+        <p className="auth-description">{isAttendee ? "Sign in or create an account to reserve passes and keep them in your wallet." : "Sign in to host and manage your gatherings. Discovering public experiences stays open to everyone."}</p>
         <form className="organizer-auth-form" onSubmit={submit}>
           <label className="form-label" htmlFor="organizer-email">Email address
             <input id="organizer-email" type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@example.com" />
@@ -110,7 +110,7 @@ export function OrganizerAuth({ onBack, audience = "organizer" }: OrganizerAuthP
             {mode === "sign-in" ? "Create an account" : "Sign in"}
           </button>
         </p>
-        <p className="auth-footnote"><ShieldCheck size={14} /> {isAttendee ? "Your tickets are private to your account." : "Event ownership is enforced by Supabase row-level security."}</p>
+        <p className="auth-footnote"><ShieldCheck size={14} /> {isAttendee ? "Your passes are private to your account." : "Event ownership is enforced by Supabase row-level security."}</p>
       </section>
     </main>
   )

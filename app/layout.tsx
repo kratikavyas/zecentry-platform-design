@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ZecEntry — Events, without the friction',
-  description: 'Discover thoughtful events, accept private demo payments and manage effortless event entry with ZecEntry.',
+  title: 'ZecEntry — Bringing People Together, irl.',
+  description: 'Discover real-world experiences, host gatherings and pay for verified passes with Zcash. ZecEntry currently supports transparent testnet payments only; mainnet is not live.',
   generator: 'ZecEntry',
   icons: {
     icon: [
