@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'ZecEntry — Bringing People Together, irl.',
-  description: 'Discover gatherings, workshops, meetups and experiences worth showing up for. Host your own and explore a Zcash testnet checkout for paid passes.',
+  description: 'Discover real-world experiences, host gatherings and pay for verified passes with Zcash. ZecEntry currently supports transparent testnet payments only; mainnet is not live.',
   generator: 'ZecEntry',
   icons: {
     icon: [

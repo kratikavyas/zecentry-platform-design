@@ -18,6 +18,7 @@ type TicketResult = {
   paymentTxid: string
   paymentAmountZat: string
   network: "testnet"
+  entryCredential: string
 }
 type PaymentRequest = {
   token: string
@@ -93,7 +94,7 @@ export function ZcashTestnetCheckout({
       if (data.state === "confirmed" && data.ticket) {
         const ticket: TicketResult = data.ticket
         setStatus("confirmed")
-        setMessage(`Confirmed on testnet with ${data.confirmations} confirmation${data.confirmations === 1 ? "" : "s"}. Ticket ${ticket.id} is ready.`)
+        setMessage(`Confirmed on testnet with ${data.confirmations} confirmation${data.confirmations === 1 ? "" : "s"}. Verified entry pass ${ticket.id} is ready.`)
         await onComplete(ticket)
         return
       }
@@ -129,7 +130,7 @@ export function ZcashTestnetCheckout({
       <div className="zcash-payment-detail"><span>EXACT AMOUNT · TESTNET ZEC</span><b>{payment.amountZec} ZEC</b><small>Includes a unique amount for this payment request. Send exactly as shown.</small></div>
       <label className="form-label">Testnet receiving address<input value={payment.address} readOnly aria-label="Zcash testnet receiving address"/><button className="text-link zcash-copy" type="button" onClick={() => void copyAddress()}><Copy size={13}/>{copied ? "Copied" : "Copy address"}</button></label>
       <a className="button button-dark buy-button zcash-wallet-link" href={payment.uri}><ExternalLink size={15}/> Open in compatible wallet</a>
-      <p className="zcash-instructions">Send the exact amount using a testnet wallet. Only a transparent testnet payment to this address can be verified with the configured public node. Request expires {new Date(payment.expiresAt).toLocaleTimeString()}.</p>
+      <p className="zcash-instructions">Send the exact amount using a testnet wallet. Only transparent testnet outputs can be verified here. Shielded or Unified Address receivers and mainnet payments are not supported. Request expires {new Date(payment.expiresAt).toLocaleTimeString()}.</p>
       <label className="form-label">Transaction ID<input value={txid} onChange={event => setTxid(event.target.value)} placeholder="64-character transaction ID" autoComplete="off" spellCheck={false} maxLength={64}/></label>
       <div className={`payment-state payment-state-${status}`} role="status" aria-live="polite"><span className={status === "pending" ? "pending-dot" : "payment-state-mark"}/><b>{status === "confirmed" ? "Confirmed" : status === "failed" ? "Failed" : status === "unavailable" ? "Unavailable" : "Pending"}</b>{message && <span>{message}</span>}</div>
       <button className="button button-green buy-button" onClick={() => void verifyPayment()} disabled={busy || txid.trim().length !== 64 || status === "confirmed"}>{busy ? "Verifying on testnet…" : "Verify payment"}</button>
