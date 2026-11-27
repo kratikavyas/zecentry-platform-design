@@ -1,4 +1,4 @@
-# ZecEntry — Setup Guide
+# ZecEntry : Setup Guide
 
 Get ZecEntry running locally and explore its event discovery, booking and Zcash testnet checkout experience.
 
