@@ -1,54 +1,117 @@
-# Architecture and security notes
+# ZecEntry : Architecture
 
-## Components and data flow
+## Overview
 
-- The Next.js App Router serves the browser app and the Zcash request/verification endpoints.
-- Supabase Auth establishes attendee and organizer sessions. Browser database access uses the Supabase publishable key and session cookies.
-- `events` is publicly readable. Authenticated users can write only events whose `organizer_id` matches their identity; the database grants only the editable event columns.
-- `tickets` is readable to its attendee and the event organizer under RLS. Ticket issuance and status changes are implemented as narrowly scoped Postgres functions.
-- The attendee wallet refetches the authenticated user's ticket rows from Supabase, allowing tickets to reappear after sign-in instead of relying on browser-only persistence.
+ZecEntry is an event discovery and ticketing platform that explores how Zcash can connect digital payments with real-world experiences.
 
-## Demo purchase
+The application brings together three core experiences:
 
-1. The attendee signs in and submits event, name, quantity, and a client-generated idempotency key.
-2. `purchase_demo_tickets` derives the attendee identity from `auth.uid()` and email from the authenticated JWT; it does not trust a client-supplied attendee ID.
-3. The function locks the event row, checks capacity, inserts a `demo` ticket, and updates the sold count in the same database transaction. The request key is unique per attendee so retries do not create duplicate demo tickets.
-4. This flow is a simulation. It transfers no funds and must not be described as a paid order.
+- **Attendees** discover events, book tickets and access their passes.
+- **Organizers** create and manage gatherings and handle event entry.
+- **Zcash integration** provides a transparent testnet payment flow designed to connect verified transactions with ticket issuance.
 
-## Zcash testnet purchase
+The application is built with Next.js and Supabase, with server-side payment verification and database-backed ticket management.
 
-1. `POST /api/zcash/request` requires an authenticated user with an email, validates the event/name/quantity, and reads the current event price from Supabase using server-side credentials.
-2. `lib/zcash-testnet.ts` validates the configured transparent testnet recipient and creates a 30-minute HMAC-signed request containing the attendee ID, event, price, quantity, recipient, exact amount in zatoshis, request key, and expiry. A random zatoshi suffix helps distinguish requests for the same base price.
-3. `POST /api/zcash/verify` authenticates again, validates the transaction ID, verifies the HMAC and attendee ownership, then asks the configured Zcash node to confirm its chain is testnet and inspect the transaction outputs.
-4. The verifier sums outputs to the configured recipient and requires the exact signed amount plus at least one confirmation. Unconfirmed transactions remain pending; invalid, wrong-network, wrong-recipient, and wrong-amount transactions do not issue tickets.
-5. Only after verification does the server call `purchase_zcash_testnet_ticket` with the service-role client. The database function checks the verified Supabase account email, request replay fields, event price, capacity, amount bounds, and transaction format. It takes an advisory lock for request replays and an event-row lock for capacity, then inserts the ticket and increments `sold` atomically.
-6. A partial unique index prevents a testnet transaction ID from issuing a second ticket. The RPC is executable by `service_role`, not `anon` or `authenticated`; the live project was queried and confirmed with this permission boundary on 2026-11-24.
-7. After the verified ticket is returned, the server derives its entry credential with a domain-separated HMAC and calls `issue_entry_credential`. The database stores only the credential's SHA-256 hash. This operation is idempotent for the same ticket and derived credential, so a retry can finish pass issuance without another payment.
+## System architecture
 
 The verifier supports transparent testnet `t` addresses only; mainnet, shielded, and Unified Address payments are unsupported. One confirmation is sufficient, but the verifier does not prove the source of funds or shield transaction metadata. A complete funded end-to-end testnet payment flow has not yet been demonstrated. Displayed INR ticket prices are indicative; testnet amounts and coins have no monetary value. A chain reorganization after the confirmation threshold is an operational risk; monitor and reconcile before production use.
+The platform is organized into four main layers.
 
-## Entry pass and organizer check-in
+### 1. Application layer
 
-A confirmed, active testnet pass can retrieve its derived QR credential only through `GET /api/entry/credential`, which authenticates the attendee, scopes the ticket query to that user, verifies the stored hash, and returns the value with private/no-store caching. The raw credential is never stored in Postgres, and preview bookings never receive one.
+The Next.js application provides the event discovery experience, event details, attendee accounts, organizer tools, checkout and ticket wallet.
 
-The staff camera uses a real browser QR decoder. `POST /api/entry/check-in` authenticates the organizer session and calls `check_in_entry_credential` with the selected gathering ID and a SHA-256 hash. The database function confirms organizer ownership, locks the credential and ticket, rejects invalid/revoked/used passes, then marks both the credential and ticket checked in atomically. Replaying the same QR returns `already_used`; a booking reference alone cannot check in a testnet-paid pass. Preview bookings retain a clearly marked manual-reference demonstration path.
+It also exposes server-side endpoints for payment requests, transaction verification and entry credentials.
 
-## Security controls
+### 2. Authentication and data layer
 
-- Supabase RLS scopes event writes and ticket reads to the authenticated attendee or event owner.
-- Privileged Zcash ticket issuance is not callable from an untrusted browser session.
-- HMAC signatures use the server-side Supabase service credential; secrets are never sent to the browser.
-- Transaction IDs are validated, RPC calls are bounded with a timeout, RPC responses are size-limited, and payment verification responses are not cached.
-- Database functions use `SECURITY DEFINER` only with `search_path = ''` and schema-qualified objects.
-- The app sets baseline response headers including `nosniff`, HSTS, referrer policy, same-origin framing, and a restrictive permissions policy.
-- Transfer is unavailable rather than implemented as a misleading status-only operation.
+Supabase provides authentication and persistent data storage.
 
-## Threat model and residual risks
+- Attendees and organizers authenticate through Supabase Auth.
+- Event information is available for discovery.
+- Event management is scoped to the authenticated organizer.
+- Attendee ticket access is restricted to the ticket owner and authorized event organizer.
+- Tickets remain associated with attendee accounts and can be retrieved across sessions.
 
-The design protects against a browser client inventing a confirmed payment, changing a signed request, claiming another account's ticket, replaying a payment transaction, or overselling event capacity through concurrent purchases. Database credentials and Zcash RPC credentials must remain server-side.
+### 3. Payment layer
 
-Residual risks include an exposed or compromised Supabase service credential, a compromised Zcash node or RPC credential, weak deployment secret management, testnet node availability, payment address reuse, chain reorganization, account takeover, transparent-address metadata exposure, camera permission/device availability, and the lack of an independent security audit. This MVP must not handle mainnet funds or be represented as production-ready financial infrastructure.
+ZecEntry separates preview bookings from Zcash testnet payments.
 
-## Migration provenance
+**Demo booking**
 
 Only three migrations are checked into this repository, and they do not provide a complete fresh-project baseline. Do not reset the connected database or treat these files as sufficient to provision a clean project. Recover and validate the full ordered migration chain against an isolated Supabase project before advertising one-command provisioning.
+The demo booking flow lets users explore the ticketing experience without transferring funds. These bookings are explicitly treated as previews, not paid orders.
+
+**Zcash testnet checkout**
+
+The testnet payment flow is designed around server-side verification:
+
+1. An authenticated attendee selects an event and ticket quantity.
+2. The server validates the request and retrieves the event price.
+3. An expiring payment request is generated with the exact amount and designated testnet recipient.
+4. The attendee submits a transaction ID after making a payment.
+5. The server checks the transaction against a configured Zcash testnet node.
+6. Ticket issuance proceeds only after the transaction meets the required network, recipient, amount and confirmation checks.
+
+The browser cannot independently declare a payment successful.
+
+### 4. Ticket and entry layer
+
+Once a testnet payment is verified, the platform can issue an attendee-bound ticket and a unique QR entry credential.
+
+- Entry credentials are stored as hashes rather than raw values.
+- Attendees retrieve their credentials through authenticated access.
+- Organizers can validate passes for events they manage.
+- Successful check-in consumes the credential, preventing it from being reused.
+
+Preview bookings do not receive verified-payment entry credentials.
+
+## Security principles
+
+The architecture follows a few important principles:
+
+- **Server-side trust:** Payment verification and privileged ticket issuance happen on the server.
+- **Access control:** Attendee and organizer permissions are enforced through authenticated sessions and database access policies.
+- **Payment integrity:** The server verifies the payment request and transaction details instead of trusting client-submitted payment status.
+- **Replay protection:** Duplicate payment submissions must not create duplicate tickets.
+- **Capacity integrity:** Ticket issuance accounts for event capacity when processing purchases.
+- **Single-use entry:** A verified QR credential can only be consumed once.
+- **Secret isolation:** Service credentials and payment infrastructure credentials remain server-side.
+
+## Current implementation scope
+
+The current prototype supports transparent Zcash testnet addresses only.
+
+It does not currently support:
+
+- Mainnet ZEC payments.
+- Shielded or Unified Address payment verification.
+- Transfers or refunds.
+- Production financial operations.
+
+Demo bookings do not transfer funds, and testnet ZEC has no real-world monetary value.
+
+The payment request generation and verification implementation are in place, but a successful end-to-end on-chain payment and entry test with funded testnet wallets remains outstanding.
+
+## Technology stack
+
+| Layer | Technology |
+|---|---|
+| Application | Next.js |
+| Language | TypeScript |
+| Authentication | Supabase Auth |
+| Database | Supabase / PostgreSQL |
+| Payment integration | Zcash transparent testnet |
+| Entry verification | QR-based check-in |
+| Deployment | Vercel |
+
+## Future direction
+
+The next steps for ZecEntry include:
+
+- Completing an end-to-end testnet payment and entry journey.
+- Exploring broader Zcash address and payment compatibility.
+- Improving organizer and attendee experiences.
+- Bringing more real-world gatherings and communities onto the platform.
+
+**ZecEntry — bringing people together, irl.**
