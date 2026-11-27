@@ -5,7 +5,7 @@
 - Node.js 24 or later
 - pnpm 12
 - A Supabase project with Auth and the ZecEntry schema configured
-- For testnet checkout only: an operator-controlled Zcash testnet node with JSON-RPC access and a valid transparent testnet receiving address. Unified/shielded receivers and mainnet are not supported.
+- For testnet checkout only: an operator-controlled Zcash testnet node with JSON-RPC access and a valid transparent testnet receiving address. Mainnet, shielded, and Unified Address payments are unsupported. The complete funded end-to-end testnet payment flow has not yet been demonstrated.
 
 ## Environment variables
 
@@ -20,7 +20,7 @@ Set these in the local environment (or the Vercel project environment settings).
 | `ZCASH_TESTNET_RPC_URL` | Zcash testnet checkout | HTTPS endpoint for a testnet node; HTTP is permitted only for localhost. |
 | `ZCASH_TESTNET_RPC_USERNAME` / `ZCASH_TESTNET_RPC_PASSWORD` | Authenticated Zcash node | Optional as a pair. Never expose these in client-side variables. |
 | `ZCASH_TESTNET_T_ADDRESS` | Zcash testnet checkout | Transparent testnet `t` address only. Shielded and Unified Address receivers are not supported. |
-| `ZEC_INR_RATE_TESTNET` | Zcash testnet checkout | Positive INR per ZEC rate used to convert ticket price. Testnet amounts have no real-world value. |
+| `ZEC_INR_RATE_TESTNET` | Zcash testnet checkout | Positive INR per ZEC rate used to convert the indicative INR ticket price. Testnet amounts and coins have no monetary value. |
 | `SUPABASE_TEST_URL` / `SUPABASE_TEST_SERVICE_ROLE_KEY` | Database integration tests | Use only with an isolated disposable test project. Test service-role credentials can create and delete test users and data. |
 
 ## Run locally
@@ -44,9 +44,7 @@ Three SQL files are currently committed under `supabase/migrations/`:
 - `20261124133124_serialize_zcash_request_replays.sql`
 - `20261126100000_verified_entry_credentials.sql`
 
-The first two migrations harden testnet ticket issuance, add unique transaction protection, and serialize duplicate request retries. The credential migration stores only a hash, allows server-side issuance only for confirmed testnet passes, and provides an organizer-authorized atomic single-use check-in function. The connected project exposed the credential table and issuance function during this review; the complete historical migration chain is still not a fresh-database bootstrap. The remote history also contains six earlier schema migrations—`create_rls_protected_events`, `grant_organizer_event_write_columns`, `create_private_demo_tickets`, `allow_event_organizers_ticket_status_updates`, `add_owner_ticket_status_rpc`, and `add_testnet_zcash_payment_receipts`—whose SQL sources are not currently checked into this repository. The live project also records four verification-query entries in its migration history. Do not run `supabase db reset`, do not apply these three files to an empty database and assume that is sufficient, and do not alter or delete the existing remote migration history.
-
-Before a clean-room release, recover the exact earlier migration SQL from its original source and validate the full ordered migration chain against an isolated Supabase project. The connected database was read-only during this final verification pass; the earlier hardening/replay migrations were applied to it before this audit.
+The first two migrations harden testnet ticket issuance, add unique transaction protection, and serialize duplicate request retries. The credential migration stores only a hash, allows server-side issuance only for confirmed testnet passes, and provides an organizer-authorized atomic single-use check-in function. The checked-in migrations are not a complete fresh-database bootstrap. Do not run `supabase db reset` or assume these three files are sufficient for an empty database. Recover the missing historical SQL and validate the full ordered migration chain against an isolated Supabase project before a clean-room release. Do not alter or delete remote migration history.
 
 ## Checks
 

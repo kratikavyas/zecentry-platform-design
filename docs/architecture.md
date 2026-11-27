@@ -25,7 +25,7 @@
 6. A partial unique index prevents a testnet transaction ID from issuing a second ticket. The RPC is executable by `service_role`, not `anon` or `authenticated`; the live project was queried and confirmed with this permission boundary on 2026-11-24.
 7. After the verified ticket is returned, the server derives its entry credential with a domain-separated HMAC and calls `issue_entry_credential`. The database stores only the credential's SHA-256 hash. This operation is idempotent for the same ticket and derived credential, so a retry can finish pass issuance without another payment.
 
-The testnet verifier currently accepts transparent `t` addresses only and considers one confirmation sufficient. It does not prove the source of funds, shield transaction metadata, implement mainnet support, or eliminate the privacy implications of transparent addresses and public-chain transaction data. A chain reorganization after the confirmation threshold is an operational risk; monitor and reconcile before production use.
+The verifier supports transparent testnet `t` addresses only; mainnet, shielded, and Unified Address payments are unsupported. One confirmation is sufficient, but the verifier does not prove the source of funds or shield transaction metadata. A complete funded end-to-end testnet payment flow has not yet been demonstrated. Displayed INR ticket prices are indicative; testnet amounts and coins have no monetary value. A chain reorganization after the confirmation threshold is an operational risk; monitor and reconcile before production use.
 
 ## Entry pass and organizer check-in
 
@@ -51,4 +51,4 @@ Residual risks include an exposed or compromised Supabase service credential, a 
 
 ## Migration provenance
 
-The repository contains three checked-in migrations in `supabase/migrations/`: testnet purchase hardening (`20261124124337`), replay serialization (`20261124133124`), and verified entry credentials (`20261126100000`). The connected Supabase project exposes the credential table and both credential RPCs; a no-user check-in call correctly returned `Authentication required`. The project also has six earlier schema-migration entries whose source files are not present in this checkout, plus four verification-query entries. The checked-in files do not constitute a complete fresh-project baseline. Do not run a reset against the connected project. Recover the historical baseline and validate it on an isolated Supabase project before advertising one-command database provisioning or using a fresh database as if it were equivalent to the live schema.
+Only three migrations are checked into this repository, and they do not provide a complete fresh-project baseline. Do not reset the connected database or treat these files as sufficient to provision a clean project. Recover and validate the full ordered migration chain against an isolated Supabase project before advertising one-command provisioning.
