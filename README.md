@@ -1,6 +1,6 @@
 # ZecEntry
 
-ZecEntry brings people together, irl. Discover experiences worth showing up for, host gatherings, and pay for verified passes with Zcash. Transparent Zcash testnet payments are the current demo path; mainnet payments are not live. Preview bookings are simulations, and testnet payments require operator configuration.
+ZecEntry brings people together, irl. Discover experiences worth showing up for, host gatherings, and explore Zcash-powered ticketing. The payment path supports transparent Zcash testnet only; mainnet, shielded, and Unified Address payments are unsupported. Preview bookings are simulations, and a complete funded testnet payment flow has not yet been demonstrated.
 
 - **Live demo:** https://zecentry-platform-design.vercel.app/
 - **Architecture and security:** [docs/architecture.md](docs/architecture.md)
@@ -21,7 +21,7 @@ ZecEntry brings people together, irl. Discover experiences worth showing up for,
 
 ## Honest limitations
 
-This is an MVP, not a production payment processor. Demo bookings are not payments. The Zcash path supports configured testnet transparent `t` addresses only; shielded and Unified Address receivers and mainnet are unsupported. Testnet coins have no real-world value. A configured node, wallet, and an actual confirmed testnet transaction are required to demonstrate a payment; an unconfigured deployment must not be presented as processing Zcash. Mainnet ZEC is the product direction, not a live feature.
+This is an MVP, not a production payment processor. Demo bookings are not payments. The Zcash path supports configured testnet transparent `t` addresses only; shielded and Unified Address receivers and mainnet are unsupported. Testnet coins have no real-world value. A configured node, wallet, and an actual confirmed testnet transaction are required to demonstrate a payment; the complete funded testnet flow has not yet been demonstrated. An unconfigured deployment must not be presented as processing Zcash. Displayed ticket prices are indicative INR amounts; Zcash requests use testnet amounts, and test coins have no monetary value. Mainnet ZEC is the product direction, not a live feature.
 
 Verified testnet passes receive a unique, server-derived QR credential. The database stores its hash and the organizer-authorized check-in function consumes it once. Preview bookings have no verified QR credential and use a clearly labelled reference-only demo path. Ticket transfers, refunds, and production-grade fraud controls are not implemented. Camera use depends on browser permission and an authorized organizer session.
 

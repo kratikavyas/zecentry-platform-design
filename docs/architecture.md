@@ -14,6 +14,7 @@ The application is built with Next.js and Supabase, with server-side payment ver
 
 ## System architecture
 
+The verifier supports transparent testnet `t` addresses only; mainnet, shielded, and Unified Address payments are unsupported. One confirmation is sufficient, but the verifier does not prove the source of funds or shield transaction metadata. A complete funded end-to-end testnet payment flow has not yet been demonstrated. Displayed INR ticket prices are indicative; testnet amounts and coins have no monetary value. A chain reorganization after the confirmation threshold is an operational risk; monitor and reconcile before production use.
 The platform is organized into four main layers.
 
 ### 1. Application layer
@@ -38,6 +39,7 @@ ZecEntry separates preview bookings from Zcash testnet payments.
 
 **Demo booking**
 
+Only three migrations are checked into this repository, and they do not provide a complete fresh-project baseline. Do not reset the connected database or treat these files as sufficient to provision a clean project. Recover and validate the full ordered migration chain against an isolated Supabase project before advertising one-command provisioning.
 The demo booking flow lets users explore the ticketing experience without transferring funds. These bookings are explicitly treated as previews, not paid orders.
 
 **Zcash testnet checkout**

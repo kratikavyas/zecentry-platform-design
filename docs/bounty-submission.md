@@ -4,10 +4,12 @@ Bringing people together, irl.
 
 The idea
 
+Displayed ticket prices are indicative INR amounts; testnet checkout uses testnet ZEC amounts, and test coins have no monetary value. Mainnet, shielded, and Unified Address payments are unsupported. The project separates a clearly labelled simulated preview booking flow from Zcash testnet payments. In the testnet path, the server creates an expiring signed payment request bound to an authenticated attendee, event, price, quantity, recipient, and exact zatoshi amount. The verification endpoint checks the signed request and attendee ownership, asks a configured Zcash testnet node to verify the network and transaction outputs, and requires the exact amount and a confirmation before requesting ticket issuance. A service-role-only database function protects issuance with transaction uniqueness, idempotent retries, event capacity locking, and an atomic ticket/sold-count update. Supabase row-level security scopes attendee ticket access and organizer event management.
 Finding people to do things with shouldn't be harder than finding the things themselves.
 
 ZecEntry is a platform for discovering gatherings, workshops and experiences worth showing up for — or hosting something of your own.
 
+**Current status and limitations:** This is an early-stage MVP, not a production payment service. Preview bookings are simulated and do not transfer funds. Zcash support is limited to transparent testnet `t` addresses; shielded and Unified Address payments and mainnet are unsupported. A complete funded end-to-end testnet payment flow has not yet been demonstrated. Testnet funds have no real-world value. A confirmed testnet payment produces a one-time QR credential; preview bookings do not. Browser camera access and an authorized organiser account are required for scan-to-check-in. Transfers and refunds are disabled. A complete funded end-to-end testnet payment flow has not yet been demonstrated. The repository is MIT-licensed, and the full historical Supabase migration source is not yet present in this checkout.
 We're exploring how Zcash can make real-world event participation simpler, connecting digital payments with experiences and people offline.
 
 Discover. Host. Show up.
